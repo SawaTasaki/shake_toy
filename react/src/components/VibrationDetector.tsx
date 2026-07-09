@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type MotionData = {
   x: number;
@@ -16,6 +16,12 @@ export default function VibrationDetector() {
 
   const [errorMsg, setErrorMsg] = useState("");
 
+  // 最後に音を鳴らした時間
+  const lastPlayTime = useRef(0);
+
+  // 効果音
+  const audio = useRef(new Audio("/sounds/magicSound4.mp3"));
+
   useEffect(() => {
     return () => {
       window.removeEventListener(
@@ -26,16 +32,34 @@ export default function VibrationDetector() {
   }, []);
 
   const handleMotion = (event: DeviceMotionEvent) => {
-    const accel =
-      event.acceleration || event.accelerationIncludingGravity;
+    const accel = event.acceleration;
 
     if (!accel) return;
 
+    const x = accel.x ?? 0;
+    const y = accel.y ?? 0;
+    const z = accel.z ?? 0;
+
     setMotionData({
-      x: Number((accel.x ?? 0).toFixed(2)),
-      y: Number((accel.y ?? 0).toFixed(2)),
-      z: Number((accel.z ?? 0).toFixed(2)),
+      x: Number(x.toFixed(2)),
+      y: Number(y.toFixed(2)),
+      z: Number(z.toFixed(2)),
     });
+
+    // 加速度の強さ
+    const power = Math.sqrt(x * x + y * y + z * z);
+
+    const now = Date.now();
+
+    // 閾値とクールダウン
+    if (power > 8 && now - lastPlayTime.current > 300) {
+      lastPlayTime.current = now;
+
+      audio.current.currentTime = 0;
+      audio.current.play().catch(console.error);
+
+      console.log("Shake!", power);
+    }
   };
 
   const startDetection = async () => {
