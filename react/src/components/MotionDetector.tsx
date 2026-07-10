@@ -25,19 +25,26 @@ export default function MotionDetector({
     };
   }, []);
 
-  const handleMotion = (event: DeviceMotionEvent) => {
-    const accel = event.acceleration;
+const handleMotion = (event: DeviceMotionEvent) => {
+  const accel =
+    event.acceleration ??
+    event.accelerationIncludingGravity;
 
-    if (!accel) return;
+  setErrorMsg(
+    `acceleration: ${event.acceleration ? "OK" : "NG"}
+gravity: ${event.accelerationIncludingGravity ? "OK" : "NG"}`
+  );
 
-    const motion = {
-      x: Number((accel.x ?? 0).toFixed(2)),
-      y: Number((accel.y ?? 0).toFixed(2)),
-      z: Number((accel.z ?? 0).toFixed(2)),
-    };
+  if (!accel) return;
 
-    onMotion(motion);
+  const motion = {
+    x: Number((accel.x ?? 0).toFixed(2)),
+    y: Number((accel.y ?? 0).toFixed(2)),
+    z: Number((accel.z ?? 0).toFixed(2)),
   };
+
+  onMotion(motion);
+};
 
   const startDetection = async () => {
     setErrorMsg("");
